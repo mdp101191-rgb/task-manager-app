@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 
+const API_URL = 'https://task-manager-app-y1cn.onrender.com';
+
 function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
   const [filter, setFilter] = useState('all');
 
   const fetchTasks = () => {
-    fetch('http://localhost:5000/tasks')
+    fetch(`${API_URL}/tasks`)
       .then((res) => res.json())
       .then((data) => setTasks(data));
   };
@@ -18,7 +20,7 @@ function App() {
   const addTask = async () => {
     if (!newTask.trim()) return;
 
-    await fetch('http://localhost:5000/tasks', {
+    await fetch(`${API_URL}/tasks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -32,7 +34,7 @@ function App() {
   };
 
   const deleteTask = async (id) => {
-    await fetch(`http://localhost:5000/tasks/${id}`, {
+    await fetch(`${API_URL}/tasks/${id}`, {
       method: 'DELETE'
     });
 
@@ -40,7 +42,7 @@ function App() {
   };
 
   const toggleTask = async (task) => {
-    await fetch(`http://localhost:5000/tasks/${task._id}`, {
+    await fetch(`${API_URL}/tasks/${task._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -68,7 +70,9 @@ function App() {
         <div style={styles.header}>
           <div>
             <h1 style={styles.title}>Task Manager</h1>
-            <p style={styles.subtitle}>A clean full-stack task tracker built with React, Express, and MongoDB.</p>
+            <p style={styles.subtitle}>
+              A clean full-stack task tracker built with React, Express, and MongoDB.
+            </p>
           </div>
           <div style={styles.badge}>Full Stack</div>
         </div>
