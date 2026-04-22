@@ -17,7 +17,7 @@ A full-stack task management application built using React, Node.js, Express, an
 - MongoDB database connection
 
 ## 📸 Screenshots
-(Add screenshots here later)
+()
 
 ## 🛠️ How to Run Locally
 
