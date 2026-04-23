@@ -81,7 +81,6 @@ MONGO_URI=your_mongodb_connection_string
 
 ## 🚀 Future Improvements
 - User authentication
-- Edit task text
 - Loading and error states
 - Dark mode
 - Mobile-first improvements
