@@ -41,7 +41,8 @@ This project is a full-stack CRUD task manager that allows users to create, view
 ![Tasks Added](./screenshot2.png)
 
 ### Filters
-![Filters](./screenshot3.png./screenshot4.png)
+![Active Filter](./screenshot3.png) 
+![Completed Filter](./screenshot4.png)
 
 ## 🧪 How to Run Locally
 
