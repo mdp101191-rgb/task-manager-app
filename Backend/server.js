@@ -45,11 +45,7 @@ const UserSchema = new mongoose.Schema({
 const TaskSchema = new mongoose.Schema({
   title: String,
   completed: Boolean,
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  }
+  userId: String
 });
 
 const User = mongoose.model('User', UserSchema);
