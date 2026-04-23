@@ -9,22 +9,114 @@ function App() {
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editedText, setEditedText] = useState('');
 
+  const [token, setToken] = useState(localStorage.getItem('token') || '');
+  const [username, setUsername] = useState(localStorage.getItem('username') || '');
+  const [authMode, setAuthMode] = useState('login');
+  const [authUsername, setAuthUsername] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authMessage, setAuthMessage] = useState('');
+
+  const authHeaders = token
+    ? {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    : {
+        'Content-Type': 'application/json'
+      };
+
   const fetchTasks = () => {
-    fetch(`${API_URL}/tasks`)
-      .then((res) => res.json())
-      .then((data) => setTasks(data));
+    if (!token) return;
+
+    fetch(`${API_URL}/tasks`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch tasks');
+        return res.json();
+      })
+      .then((data) => setTasks(data))
+      .catch(() => setTasks([]));
   };
 
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    if (token) {
+      fetchTasks();
+    } else {
+      setTasks([]);
+    }
+  }, [token]);
+
+  const handleRegister = async () => {
+    setAuthMessage('');
+
+    const res = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: authUsername.trim(),
+        password: authPassword
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setAuthMessage(data.message || 'Registration failed');
+      return;
+    }
+
+    setAuthMessage('Registration successful. Please log in.');
+    setAuthMode('login');
+  };
+
+  const handleLogin = async () => {
+    setAuthMessage('');
+
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: authUsername.trim(),
+        password: authPassword
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setAuthMessage(data.message || 'Login failed');
+      return;
+    }
+
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('username', data.username);
+    setToken(data.token);
+    setUsername(data.username);
+    setAuthUsername('');
+    setAuthPassword('');
+    setAuthMessage('');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    setToken('');
+    setUsername('');
+    setTasks([]);
+    setNewTask('');
+    setEditingTaskId(null);
+    setEditedText('');
+  };
 
   const addTask = async () => {
     if (!newTask.trim()) return;
 
     await fetch(`${API_URL}/tasks`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders,
       body: JSON.stringify({
         title: newTask.trim(),
         completed: false
@@ -37,7 +129,10 @@ function App() {
 
   const deleteTask = async (id) => {
     await fetch(`${API_URL}/tasks/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
 
     fetchTasks();
@@ -46,7 +141,7 @@ function App() {
   const toggleTask = async (task) => {
     await fetch(`${API_URL}/tasks/${task._id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders,
       body: JSON.stringify({
         title: task.title,
         completed: !task.completed
@@ -71,7 +166,7 @@ function App() {
 
     await fetch(`${API_URL}/tasks/${task._id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders,
       body: JSON.stringify({
         title: editedText.trim(),
         completed: task.completed
@@ -93,6 +188,64 @@ function App() {
   const completedCount = tasks.filter((task) => task.completed).length;
   const activeCount = totalTasks - completedCount;
 
+  if (!token) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.authCard}>
+          <h1 style={styles.title}>Task Manager</h1>
+          <p style={styles.subtitle}>
+            Sign in to manage your own tasks securely.
+          </p>
+
+          <div style={styles.filterRow}>
+            <button
+              onClick={() => setAuthMode('login')}
+              style={authMode === 'login' ? styles.filterButtonActive : styles.filterButton}
+            >
+              Login
+            </button>
+            <button
+              onClick={() => setAuthMode('register')}
+              style={authMode === 'register' ? styles.filterButtonActive : styles.filterButton}
+            >
+              Register
+            </button>
+          </div>
+
+          <div style={styles.authForm}>
+            <input
+              type="text"
+              placeholder="Username"
+              value={authUsername}
+              onChange={(e) => setAuthUsername(e.target.value)}
+              style={styles.input}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={authPassword}
+              onChange={(e) => setAuthPassword(e.target.value)}
+              style={styles.input}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  authMode === 'login' ? handleLogin() : handleRegister();
+                }
+              }}
+            />
+            <button
+              onClick={authMode === 'login' ? handleLogin : handleRegister}
+              style={styles.addButton}
+            >
+              {authMode === 'login' ? 'Login' : 'Register'}
+            </button>
+
+            {authMessage && <p style={styles.authMessage}>{authMessage}</p>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.page}>
       <div style={styles.card}>
@@ -102,8 +255,14 @@ function App() {
             <p style={styles.subtitle}>
               A clean full-stack task tracker built with React, Express, and MongoDB.
             </p>
+            <p style={styles.userText}>Logged in as: {username}</p>
           </div>
-          <div style={styles.badge}>Full Stack</div>
+          <div style={styles.headerActions}>
+            <div style={styles.badge}>Full Stack</div>
+            <button onClick={handleLogout} style={styles.logoutButton}>
+              Logout
+            </button>
+          </div>
         </div>
 
         <div style={styles.statsRow}>
@@ -215,25 +374,16 @@ function App() {
                 <div style={styles.buttonGroup}>
                   {editingTaskId === task._id ? (
                     <>
-                      <button
-                        onClick={() => saveEdit(task)}
-                        style={styles.saveButton}
-                      >
+                      <button onClick={() => saveEdit(task)} style={styles.saveButton}>
                         Save
                       </button>
-                      <button
-                        onClick={cancelEditing}
-                        style={styles.cancelButton}
-                      >
+                      <button onClick={cancelEditing} style={styles.cancelButton}>
                         Cancel
                       </button>
                     </>
                   ) : (
                     <>
-                      <button
-                        onClick={() => startEditing(task)}
-                        style={styles.editButton}
-                      >
+                      <button onClick={() => startEditing(task)} style={styles.editButton}>
                         Edit
                       </button>
                       <button
@@ -279,6 +429,25 @@ const styles = {
     padding: '32px',
     border: '1px solid #e2e8f0'
   },
+  authCard: {
+    width: '100%',
+    maxWidth: '480px',
+    backgroundColor: '#ffffff',
+    borderRadius: '24px',
+    boxShadow: '0 25px 70px rgba(15, 23, 42, 0.12)',
+    padding: '32px',
+    border: '1px solid #e2e8f0'
+  },
+  authForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '14px',
+    marginTop: '16px'
+  },
+  authMessage: {
+    color: '#334155',
+    marginTop: '6px'
+  },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -286,6 +455,12 @@ const styles = {
     gap: '16px',
     marginBottom: '24px',
     flexWrap: 'wrap'
+  },
+  headerActions: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    alignItems: 'flex-end'
   },
   title: {
     margin: 0,
@@ -302,6 +477,12 @@ const styles = {
     maxWidth: '600px',
     lineHeight: 1.5
   },
+  userText: {
+    marginTop: '10px',
+    color: '#475569',
+    fontSize: '0.95rem',
+    fontWeight: 600
+  },
   badge: {
     backgroundColor: '#dbeafe',
     color: '#1d4ed8',
@@ -310,6 +491,15 @@ const styles = {
     padding: '10px 14px',
     borderRadius: '999px',
     whiteSpace: 'nowrap'
+  },
+  logoutButton: {
+    backgroundColor: '#0f172a',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '12px',
+    padding: '10px 14px',
+    cursor: 'pointer',
+    fontWeight: 700
   },
   statsRow: {
     display: 'grid',
