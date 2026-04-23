@@ -33,7 +33,15 @@ This project is a full-stack CRUD task manager that allows users to create, view
 - DELETE /tasks/:id → delete a task  
 
 ## 📷 Screenshots
-(Screenshots coming soon)
+
+### Empty State
+![Empty State](./screenshot1.png)
+
+### With Tasks
+![Tasks Added](./screenshot2.png)
+
+### Filters
+![Filters](./screenshot3.png./screenshot4.png)
 
 ## 🧪 How to Run Locally
 
