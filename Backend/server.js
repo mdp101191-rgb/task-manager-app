@@ -8,9 +8,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log('MongoDB error:', err));
+console.log('Mongo URI exists:', !!process.env.MONGO_URI);
+
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 15000
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => {
+  console.error('MongoDB connection failed:');
+  console.error(err);
+});
+
+mongoose.connection.on('error', err => {
+  console.error('Mongoose runtime error:', err);
+});
+
+mongoose.connection.on('connected', () => {
+  console.log('Mongoose connected event fired');
+});
 
 const TaskSchema = new mongoose.Schema({
   title: String,
