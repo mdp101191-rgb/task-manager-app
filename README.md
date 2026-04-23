@@ -18,13 +18,13 @@ This project is a full-stack CRUD task manager that allows users to create, view
 - **API Testing:** Postman
 
 ## ✨ Features
-- Add new tasks
-- View all tasks
-- Mark tasks as completed
-- Delete tasks
-- Filter by all, active, and completed
-- Persistent cloud database storage
-- Responsive UI with polished card-based layout
+- Create, view, update, and delete tasks (full CRUD)
+- Mark tasks as completed or active
+- Inline editing with save and cancel functionality
+- Filter tasks by all, active, and completed
+- Persistent cloud storage with MongoDB Atlas
+- Responsive, modern UI with card-based layout
+- Deployed full-stack architecture (Vercel + Render)
 
 ## 🔌 API Endpoints
 - GET /tasks → fetch all tasks  
