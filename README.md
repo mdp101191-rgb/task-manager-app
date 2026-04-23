@@ -1,6 +1,6 @@
-#Is this correct? Ill jump into the about section on the right of repo after because i dont see it. 🚀 Task Manager App
+# 🚀 Task Manager App
 
-A full-stack task management application built with React, Node.js, Express, and MongoDB Atlas.
+Deployed full-stack application with a live frontend, API, and cloud database.
 
 ## 🌐 Live Demo
 Frontend: [Live App](https://task-manager-app-three-rho.vercel.app/)
@@ -26,16 +26,20 @@ This project is a full-stack CRUD task manager that allows users to create, view
 - Persistent cloud database storage
 - Responsive UI with polished card-based layout
 
+## 🔌 API Endpoints
+- GET /tasks → fetch all tasks  
+- POST /tasks → create a task  
+- PUT /tasks/:id → update a task  
+- DELETE /tasks/:id → delete a task  
+
 ## 📷 Screenshots
-_Add screenshots here_
+(Screenshots coming soon)
 
 ## 🧪 How to Run Locally
 
 ### 1. Clone the repo
 ```bash
-git clone YOUR_GITHUB_REPO_URL_HERE
-cd task-manager-app
-```
+git clone https://github.com/mdp101191-rgb/task-manager-app.git
 
 ### 2. Start the backend
 ```bash
