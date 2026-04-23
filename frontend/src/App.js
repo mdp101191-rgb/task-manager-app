@@ -6,6 +6,8 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
   const [filter, setFilter] = useState('all');
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editedText, setEditedText] = useState('');
 
   const fetchTasks = () => {
     fetch(`${API_URL}/tasks`)
@@ -51,6 +53,33 @@ function App() {
       })
     });
 
+    fetchTasks();
+  };
+
+  const startEditing = (task) => {
+    setEditingTaskId(task._id);
+    setEditedText(task.title);
+  };
+
+  const cancelEditing = () => {
+    setEditingTaskId(null);
+    setEditedText('');
+  };
+
+  const saveEdit = async (task) => {
+    if (!editedText.trim()) return;
+
+    await fetch(`${API_URL}/tasks/${task._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: editedText.trim(),
+        completed: task.completed
+      })
+    });
+
+    setEditingTaskId(null);
+    setEditedText('');
     fetchTasks();
   };
 
@@ -153,35 +182,74 @@ function App() {
                   </button>
 
                   <div style={styles.taskTextWrap}>
-                    <span
-                      style={{
-                        ...styles.taskText,
-                        textDecoration: task.completed ? 'line-through' : 'none',
-                        color: task.completed ? '#94a3b8' : '#0f172a'
-                      }}
-                    >
-                      {task.title}
-                    </span>
-                    <span style={styles.taskMeta}>
-                      {task.completed ? 'Completed' : 'Active'}
-                    </span>
+                    {editingTaskId === task._id ? (
+                      <input
+                        value={editedText}
+                        onChange={(e) => setEditedText(e.target.value)}
+                        style={styles.editInput}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveEdit(task);
+                          if (e.key === 'Escape') cancelEditing();
+                        }}
+                        autoFocus
+                      />
+                    ) : (
+                      <>
+                        <span
+                          style={{
+                            ...styles.taskText,
+                            textDecoration: task.completed ? 'line-through' : 'none',
+                            color: task.completed ? '#94a3b8' : '#0f172a'
+                          }}
+                        >
+                          {task.title}
+                        </span>
+                        <span style={styles.taskMeta}>
+                          {task.completed ? 'Completed' : 'Active'}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
                 <div style={styles.buttonGroup}>
-                  <button
-                    onClick={() => toggleTask(task)}
-                    style={task.completed ? styles.undoButton : styles.completeButton}
-                  >
-                    {task.completed ? 'Undo' : 'Complete'}
-                  </button>
-
-                  <button
-                    onClick={() => deleteTask(task._id)}
-                    style={styles.deleteButton}
-                  >
-                    Delete
-                  </button>
+                  {editingTaskId === task._id ? (
+                    <>
+                      <button
+                        onClick={() => saveEdit(task)}
+                        style={styles.saveButton}
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={cancelEditing}
+                        style={styles.cancelButton}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => startEditing(task)}
+                        style={styles.editButton}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => toggleTask(task)}
+                        style={task.completed ? styles.undoButton : styles.completeButton}
+                      >
+                        {task.completed ? 'Undo' : 'Complete'}
+                      </button>
+                      <button
+                        onClick={() => deleteTask(task._id)}
+                        style={styles.deleteButton}
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))
@@ -282,6 +350,14 @@ const styles = {
     outline: 'none',
     backgroundColor: '#fff'
   },
+  editInput: {
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: '10px',
+    border: '1px solid #93c5fd',
+    fontSize: '0.95rem',
+    outline: 'none'
+  },
   addButton: {
     backgroundColor: '#2563eb',
     color: '#fff',
@@ -381,7 +457,8 @@ const styles = {
   taskTextWrap: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '4px'
+    gap: '4px',
+    flex: 1
   },
   taskText: {
     fontSize: '1rem',
@@ -396,6 +473,33 @@ const styles = {
     display: 'flex',
     gap: '8px',
     flexWrap: 'wrap'
+  },
+  editButton: {
+    backgroundColor: '#7c3aed',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '12px',
+    padding: '10px 14px',
+    cursor: 'pointer',
+    fontWeight: 700
+  },
+  saveButton: {
+    backgroundColor: '#2563eb',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '12px',
+    padding: '10px 14px',
+    cursor: 'pointer',
+    fontWeight: 700
+  },
+  cancelButton: {
+    backgroundColor: '#64748b',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '12px',
+    padding: '10px 14px',
+    cursor: 'pointer',
+    fontWeight: 700
   },
   completeButton: {
     backgroundColor: '#16a34a',
