@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const API_URL = 'https://task-manager-app-y1cn.onrender.com';
 
@@ -25,7 +25,7 @@ function App() {
         'Content-Type': 'application/json'
       };
 
-const fetchTasks = () => {
+const fetchTasks = useCallback(() => {
   if (!token) return;
 
   fetch(`${API_URL}/tasks`, {
@@ -53,7 +53,7 @@ const fetchTasks = () => {
       console.error(err);
       setTasks([]);
     });
-};
+}, [token]);
 
 useEffect(() => {
   if (token) {
@@ -61,7 +61,7 @@ useEffect(() => {
   } else {
     setTasks([]);
   }
-}, [token]);
+}, [token, fetchTasks]);
   const handleRegister = async () => {
     setAuthMessage('');
 
