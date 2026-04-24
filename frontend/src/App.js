@@ -25,30 +25,43 @@ function App() {
         'Content-Type': 'application/json'
       };
 
-  const fetchTasks = () => {
-    if (!token) return;
+const fetchTasks = () => {
+  if (!token) return;
 
-    fetch(`${API_URL}/tasks`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch tasks');
-        return res.json();
-      })
-      .then((data) => setTasks(data))
-      .catch(() => setTasks([]));
-  };
-
-  useEffect(() => {
-    if (token) {
-      fetchTasks();
-    } else {
-      setTasks([]);
+  fetch(`${API_URL}/tasks`, {
+    headers: {
+      Authorization: `Bearer ${token}`
     }
-  }, [token]);
+  })
+    .then(async (res) => {
+      const data = await res.json();
 
+      if (!res.ok) {
+        console.error('Fetch error:', data);
+        setTasks([]);
+        return;
+      }
+
+      if (!Array.isArray(data)) {
+        setTasks([]);
+        return;
+      }
+
+      setTasks(data);
+    })
+    .catch((err) => {
+      console.error(err);
+      setTasks([]);
+    });
+};
+
+useEffect(() => {
+  if (token) {
+    fetchTasks();
+  } else {
+    setTasks([]);
+  }
+}, [token]);
   const handleRegister = async () => {
     setAuthMessage('');
 

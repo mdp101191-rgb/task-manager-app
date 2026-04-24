@@ -45,7 +45,11 @@ const UserSchema = new mongoose.Schema({
 const TaskSchema = new mongoose.Schema({
   title: String,
   completed: Boolean,
-  userId: String
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }
 });
 
 const User = mongoose.model('User', UserSchema);
@@ -119,11 +123,11 @@ app.post('/auth/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign(
-      { userId: user._id, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+  const token = jwt.sign(
+  { id: user._id, username: user.username },
+  process.env.JWT_SECRET,
+  { expiresIn: '7d' }
+);
 
     res.json({
       token,
@@ -136,7 +140,7 @@ app.post('/auth/login', async (req, res) => {
 });
 
 app.get('/tasks', authMiddleware, async (req, res) => {
-  const tasks = await Task.find({ userId: req.user.userId });
+  const tasks = await Task.find({ userId: req.user.id });
   res.json(tasks);
 });
 
@@ -144,7 +148,7 @@ app.post('/tasks', authMiddleware, async (req, res) => {
   const newTask = new Task({
     title: req.body.title,
     completed: req.body.completed ?? false,
-    userId: req.user.userId
+    userId: req.user.id
   });
 
   await newTask.save();
@@ -154,7 +158,7 @@ app.post('/tasks', authMiddleware, async (req, res) => {
 app.delete('/tasks/:id', authMiddleware, async (req, res) => {
   await Task.findOneAndDelete({
     _id: req.params.id,
-    userId: req.user.userId
+    userId: req.user.id
   });
 
   res.json({ message: 'Task deleted' });
@@ -164,7 +168,7 @@ app.put('/tasks/:id', authMiddleware, async (req, res) => {
   const updatedTask = await Task.findOneAndUpdate(
     {
       _id: req.params.id,
-      userId: req.user.userId
+      userId: req.user.id
     },
     req.body,
     { new: true }
