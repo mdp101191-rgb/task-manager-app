@@ -16,6 +16,9 @@ function App() {
   const [authPassword, setAuthPassword] = useState('');
   const [authMessage, setAuthMessage] = useState('');
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const authHeaders = token
     ? {
         'Content-Type': 'application/json',
@@ -28,6 +31,9 @@ function App() {
 const fetchTasks = useCallback(() => {
   if (!token) return;
 
+  setLoading(true);
+  setError('');
+
   fetch(`${API_URL}/tasks`, {
     headers: {
       Authorization: `Bearer ${token}`
@@ -37,12 +43,13 @@ const fetchTasks = useCallback(() => {
       const data = await res.json();
 
       if (!res.ok) {
-        console.error('Fetch error:', data);
+        setError(data.message || 'Failed to load tasks');
         setTasks([]);
         return;
       }
 
       if (!Array.isArray(data)) {
+        setError('Unexpected server response');
         setTasks([]);
         return;
       }
@@ -51,7 +58,11 @@ const fetchTasks = useCallback(() => {
     })
     .catch((err) => {
       console.error(err);
+      setError('Could not connect to the server');
       setTasks([]);
+    })
+    .finally(() => {
+      setLoading(false);
     });
 }, [token]);
 
@@ -329,6 +340,9 @@ useEffect(() => {
             Completed
           </button>
         </div>
+
+      {error && <p style={styles.errorText}>{error}</p>}
+      {loading && <p style={styles.loadingText}>Loading tasks...</p>}
 
         <div style={styles.list}>
           {filteredTasks.length === 0 ? (
@@ -730,7 +744,25 @@ const styles = {
     padding: '10px 14px',
     cursor: 'pointer',
     fontWeight: 700
-  }
+  },
+  errorText: {
+  color: '#dc2626',
+  backgroundColor: '#fee2e2',
+  border: '1px solid #fecaca',
+  padding: '12px',
+  borderRadius: '12px',
+  fontWeight: 600,
+  marginBottom: '16px'
+},
+loadingText: {
+  color: '#475569',
+  backgroundColor: '#f8fafc',
+  border: '1px solid #e2e8f0',
+  padding: '12px',
+  borderRadius: '12px',
+  fontWeight: 600,
+  marginBottom: '16px'
+}
 };
 
 export default App;
