@@ -78,7 +78,7 @@ const fetchTasks = useCallback(() => {
     .finally(() => {
       setLoading(false);
     });
-}, [token]);
+}, [token, error]);
 
 useEffect(() => {
   if (token) {
