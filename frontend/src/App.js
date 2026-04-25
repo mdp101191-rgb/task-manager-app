@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import './App.css';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import toast, { Toaster } from 'react-hot-toast';
+import { FaArrowUp, FaMinus, FaArrowDown } from "react-icons/fa";
+
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -18,6 +21,7 @@ function App() {
   const [filter, setFilter] = useState('all');
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editedText, setEditedText] = useState('');
+  const [darkMode, setDarkMode] = useState(false);
 
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [username, setUsername] = useState(localStorage.getItem('username') || '');
@@ -86,7 +90,18 @@ useEffect(() => {
   } else {
     setTasks([]);
   }
-}, [token, fetchTasks]);
+},
+ [token, fetchTasks]);
+
+useEffect(() => {
+  const saved = localStorage.getItem("darkMode");
+  if (saved) setDarkMode(saved === "true");
+}, []);
+
+useEffect(() => {
+  localStorage.setItem("darkMode", darkMode);
+}, [darkMode]);
+
   const handleRegister = async () => {
     setAuthMessage('');
 
@@ -354,7 +369,7 @@ toast.success('Task updated');
   }
 
   return (
-    <div style={styles.page}>
+  <div className={`app-container ${darkMode ? "dark" : ""}`}>
       <Toaster position="top-right" />
       <div style={styles.card}>
         <div style={styles.header}>
@@ -366,11 +381,19 @@ toast.success('Task updated');
             <p style={styles.userText}>Logged in as: {username}</p>
           </div>
           <div style={styles.headerActions}>
-            <div style={styles.badge}>Full Stack</div>
-            <button onClick={handleLogout} style={styles.logoutButton}>
-              Logout
-            </button>
-          </div>
+  <div style={styles.badge}>Full Stack</div>
+
+  <button
+    onClick={() => setDarkMode(!darkMode)}
+    style={styles.logoutButton}
+  >
+    {darkMode ? "☀️ Light" : "🌙 Dark"}
+  </button>
+
+  <button onClick={handleLogout} style={styles.logoutButton}>
+    Logout
+  </button>
+</div>
         </div>
 
         <div style={styles.statsRow}>
