@@ -45,6 +45,24 @@ const UserSchema = new mongoose.Schema({
 const TaskSchema = new mongoose.Schema({
   title: String,
   completed: Boolean,
+  priority: {
+    type: String,
+    enum: ['low', 'medium', 'high'],
+    default: 'medium'
+  },
+  category: {
+  type: String,
+  default: 'General',
+  trim: true
+},
+  dueDate: {
+    type: Date,
+    default: null
+  },
+  order: {
+    type: Number,
+    default: null
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -66,7 +84,15 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    console.log('Decoded user:', decoded);
+
+    req.user = {
+      id: decoded.id || decoded.userId || decoded._id
+    };
+
+    console.log('Decoded user:', decoded);
+    console.log('Req user:', req.user);
+
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Invalid token' });
@@ -140,19 +166,27 @@ app.post('/auth/login', async (req, res) => {
 });
 
 app.get('/tasks', authMiddleware, async (req, res) => {
-  const tasks = await Task.find({ userId: req.user.id });
-  res.json(tasks);
+  try {
+    const tasks = await Task.find({ userId: req.user.id }).sort({ order: 1 });
+    res.json(tasks);
+  } catch (error) {
+    console.error('Get tasks error:', error);
+    res.status(500).json({ message: 'Server error loading tasks' });
+  }
 });
 
 app.post('/tasks', authMiddleware, async (req, res) => {
-  const newTask = new Task({
-    title: req.body.title,
-    completed: req.body.completed ?? false,
-    userId: req.user.id
-  });
+const task = new Task({
+  title: req.body.title,
+  completed: req.body.completed ?? false,
+  priority: req.body.priority || 'medium',
+  category: req.body.category || 'General',
+  userId: req.user.id,
+  dueDate: req.body.dueDate || null,
+});
 
-  await newTask.save();
-  res.json(newTask);
+  await task.save();
+  res.json(task);
 });
 
 app.delete('/tasks/:id', authMiddleware, async (req, res) => {
@@ -162,6 +196,31 @@ app.delete('/tasks/:id', authMiddleware, async (req, res) => {
   });
 
   res.json({ message: 'Task deleted' });
+});
+
+app.put('/tasks/reorder', authMiddleware, async (req, res) => {
+  try {
+    const updates = req.body;
+
+    const bulkOps = updates.map((task, index) => ({
+      updateOne: {
+        filter: {
+          _id: task._id,
+          userId: req.user.id
+        },
+        update: {
+          $set: { order: index }
+        }
+      }
+    }));
+
+    await Task.bulkWrite(bulkOps);
+
+    res.json({ message: 'Order updated' });
+  } catch (error) {
+    console.error('Reorder error:', error);
+    res.status(500).json({ message: 'Server error reordering tasks' });
+  }
 });
 
 app.put('/tasks/:id', authMiddleware, async (req, res) => {

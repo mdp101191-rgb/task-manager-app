@@ -1,8 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import toast, { Toaster } from 'react-hot-toast';
 
-const API_URL = 'https://task-manager-app-y1cn.onrender.com';
+const API_URL = process.env.REACT_APP_API_URL;
 
 function App() {
+  const [priority, setPriority] = useState('medium');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [editedPriority, setEditedPriority] = useState('medium');
+  const [category, setCategory] = useState('General');
+  const [editedCategory, setEditedCategory] = useState('General');
+  const [dueDate, setDueDate] = useState('');
+  const [editedDueDate, setEditedDueDate] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
   const [filter, setFilter] = useState('all');
@@ -43,12 +53,14 @@ const fetchTasks = useCallback(() => {
       const data = await res.json();
 
       if (!res.ok) {
+        toast.error(error);
         setError(data.message || 'Failed to load tasks');
         setTasks([]);
         return;
       }
 
       if (!Array.isArray(data)) {
+        toast.error(error);
         setError('Unexpected server response');
         setTasks([]);
         return;
@@ -58,7 +70,9 @@ const fetchTasks = useCallback(() => {
     })
     .catch((err) => {
       console.error(err);
+      toast.error(error);
       setError('Could not connect to the server');
+
       setTasks([]);
     })
     .finally(() => {
@@ -143,13 +157,45 @@ useEffect(() => {
       headers: authHeaders,
       body: JSON.stringify({
         title: newTask.trim(),
-        completed: false
+        completed: false,
+        priority: editedPriority,
+        category: editedCategory.trim() || 'General',
+        dueDate: dueDate || null
       })
     });
 
+    toast.success('Task added');
+
     setNewTask('');
+    setDueDate('');
+    setPriority('medium');
+    setCategory('General');
     fetchTasks();
   };
+
+const onDragEnd = async (result) => {
+  if (!result.destination) return;
+
+  const reordered = Array.from(filteredTasks);
+  const [moved] = reordered.splice(result.source.index, 1);
+  reordered.splice(result.destination.index, 0, moved);
+
+  const updatedTasks = reordered.map((task, index) => ({
+    ...task,
+    order: index
+  }));
+
+  setTasks(updatedTasks);
+
+  await fetch(`${API_URL}/tasks/reorder`, {
+    method: 'PUT',
+    headers: authHeaders,
+    body: JSON.stringify(updatedTasks)
+  });
+
+  toast.success('Order saved');
+
+};
 
   const deleteTask = async (id) => {
     await fetch(`${API_URL}/tasks/${id}`, {
@@ -158,6 +204,8 @@ useEffect(() => {
         Authorization: `Bearer ${token}`
       }
     });
+
+    toast.success('Task deleted');
 
     fetchTasks();
   };
@@ -175,14 +223,19 @@ useEffect(() => {
     fetchTasks();
   };
 
-  const startEditing = (task) => {
-    setEditingTaskId(task._id);
-    setEditedText(task.title);
-  };
+const startEditing = (task) => {
+  setEditingTaskId(task._id);
+  setEditedText(task.title);
+  setEditedPriority(task.priority || 'medium');
+  setEditedDueDate(task.dueDate ? task.dueDate.split('T')[0] : '');
+  setEditedCategory(task.category || 'General');
+};
 
   const cancelEditing = () => {
     setEditingTaskId(null);
     setEditedText('');
+    setEditedPriority('medium');
+    setEditedCategory('General');
   };
 
   const saveEdit = async (task) => {
@@ -192,10 +245,15 @@ useEffect(() => {
       method: 'PUT',
       headers: authHeaders,
       body: JSON.stringify({
-        title: editedText.trim(),
-        completed: task.completed
-      })
+  title: editedText.trim(),
+  completed: task.completed,
+  priority: editedPriority,
+  dueDate: editedDueDate || null,
+  category: editedCategory || 'General'
+})
     });
+
+toast.success('Task updated');
 
     setEditingTaskId(null);
     setEditedText('');
@@ -203,10 +261,35 @@ useEffect(() => {
   };
 
   const filteredTasks = useMemo(() => {
-    if (filter === 'completed') return tasks.filter((task) => task.completed);
-    if (filter === 'active') return tasks.filter((task) => !task.completed);
-    return tasks;
-  }, [tasks, filter]);
+  let result = tasks;
+
+  if (filter === 'completed') {
+    result = result.filter((task) => task.completed);
+  }
+
+  if (filter === 'active') {
+    result = result.filter((task) => !task.completed);
+  }
+
+  if (priorityFilter !== 'all') {
+    result = result.filter((task) => (task.priority || 'medium') === priorityFilter);
+  }
+
+  if (searchTerm.trim()) {
+  result = result.filter((task) =>
+    task.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+}
+
+  const priorityOrder = { high: 3, medium: 2, low: 1 };
+
+  return [...result].sort((a, b) => {
+    return (
+      priorityOrder[b.priority || 'medium'] -
+      priorityOrder[a.priority || 'medium']
+    );
+  });
+}, [tasks, filter, priorityFilter, searchTerm]);
 
   const totalTasks = tasks.length;
   const completedCount = tasks.filter((task) => task.completed).length;
@@ -272,6 +355,7 @@ useEffect(() => {
 
   return (
     <div style={styles.page}>
+      <Toaster position="top-right" />
       <div style={styles.card}>
         <div style={styles.header}>
           <div>
@@ -305,20 +389,49 @@ useEffect(() => {
         </div>
 
         <div style={styles.inputRow}>
-          <input
-            type="text"
-            placeholder="Enter a task"
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            style={styles.input}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') addTask();
-            }}
-          />
-          <button onClick={addTask} style={styles.addButton}>
-            Add Task
-          </button>
+<input
+  type="text"
+  placeholder="Enter a task"
+  value={newTask}
+  onChange={(e) => setNewTask(e.target.value)}
+  style={styles.input}
+/>
+<input
+  type="text"
+  placeholder="Category"
+  value={category}
+  onChange={(e) => setCategory(e.target.value)}
+  style={styles.prioritySelect}
+/>
+<select
+  value={priority}
+  onChange={(e) => setPriority(e.target.value)}
+  style={{ marginLeft: '10px', padding: '8px' }}
+>
+  <option value="low">Low</option>
+  <option value="medium">Medium</option>
+  <option value="high">High</option>
+</select>
+
+<input
+  type="date"
+  value={dueDate}
+  onChange={(e) => setDueDate(e.target.value)}
+  style={{ marginLeft: '10px', padding: '8px' }}
+/>
+
+<button onClick={addTask} style={styles.addButton}>
+  Add Task
+</button>
         </div>
+
+        <input
+  type="text"
+  placeholder="Search tasks..."
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+  style={styles.searchInput}
+/>
 
         <div style={styles.filterRow}>
           <button
@@ -340,100 +453,197 @@ useEffect(() => {
             Completed
           </button>
         </div>
-
+<div style={styles.filterRow}>
+  <button
+    onClick={() => setPriorityFilter('all')}
+    style={priorityFilter === 'all' ? styles.filterButtonActive : styles.filterButton}
+  >
+    All Priorities
+  </button>
+  <button
+    onClick={() => setPriorityFilter('high')}
+    style={priorityFilter === 'high' ? styles.filterButtonActive : styles.filterButton}
+  >
+    High
+  </button>
+  <button
+    onClick={() => setPriorityFilter('medium')}
+    style={priorityFilter === 'medium' ? styles.filterButtonActive : styles.filterButton}
+  >
+    Medium
+  </button>
+  <button
+    onClick={() => setPriorityFilter('low')}
+    style={priorityFilter === 'low' ? styles.filterButtonActive : styles.filterButton}
+  >
+    Low
+  </button>
+</div>
       {error && <p style={styles.errorText}>{error}</p>}
       {loading && <p style={styles.loadingText}>Loading tasks...</p>}
 
-        <div style={styles.list}>
-          {filteredTasks.length === 0 ? (
-            <div style={styles.emptyState}>
-              <p style={styles.emptyTitle}>No tasks found</p>
-              <p style={styles.emptyText}>
-                {filter === 'all'
-                  ? 'Add your first task to get started.'
-                  : `There are no ${filter} tasks right now.`}
-              </p>
-            </div>
-          ) : (
-            filteredTasks.map((task) => (
-              <div key={task._id} style={styles.taskItem}>
-                <div style={styles.taskLeft}>
-                  <button
-                    onClick={() => toggleTask(task)}
-                    style={task.completed ? styles.checkboxDone : styles.checkbox}
-                    aria-label="Toggle task complete"
-                    title="Toggle complete"
-                  >
-                    {task.completed ? '✓' : ''}
-                  </button>
+<DragDropContext onDragEnd={onDragEnd}>
+  <Droppable droppableId="tasks">
+    {(provided) => (
+      <div
+        style={styles.list}
+        ref={provided.innerRef}
+        {...provided.droppableProps}
+      >
+        {filteredTasks.length === 0 ? (
+          <div style={styles.emptyState}>
+            <p style={styles.emptyTitle}>No tasks found</p>
+            <p style={styles.emptyText}>
+              {filter === 'all'
+                ? 'Add your first task to get started.'
+                : `There are no ${filter} tasks right now.`}
+            </p>
+          </div>
+        ) : (
+          filteredTasks.map((task, index) => (
+            <Draggable key={task._id} draggableId={task._id} index={index}>
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.draggableProps}
+                  {...provided.dragHandleProps}
+                  style={{
+                    ...styles.taskItem,
+                    ...provided.draggableProps.style
+                  }}
+                >
+                  <div style={styles.taskLeft}>
+                    <button
+                      onClick={() => toggleTask(task)}
+                      style={task.completed ? styles.checkboxDone : styles.checkbox}
+                    >
+                      {task.completed ? '✓' : ''}
+                    </button>
 
-                  <div style={styles.taskTextWrap}>
+                    <div style={styles.taskTextWrap}>
+                      {editingTaskId === task._id ? (
+                        <>
+                          <input
+                            value={editedText}
+                            onChange={(e) => setEditedText(e.target.value)}
+                            style={styles.editInput}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveEdit(task);
+                              if (e.key === 'Escape') cancelEditing();
+                            }}
+                            autoFocus
+                          />
+
+                          <select
+                            value={editedPriority}
+                            onChange={(e) => setEditedPriority(e.target.value)}
+                            style={styles.prioritySelect}
+                          >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                          </select>
+
+                          <input
+                           type="text"
+                           placeholder="Category"
+                           value={editedCategory}
+                           onChange={(e) => setEditedCategory(e.target.value)}
+                           style={styles.prioritySelect}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <span
+                            style={{
+                              ...styles.taskText,
+                              textDecoration: task.completed ? 'line-through' : 'none',
+                              color: task.completed ? '#94a3b8' : '#0f172a'
+                            }}
+                          >
+                            {task.title}
+                          </span>
+
+                          <div style={styles.metaRow}>
+                            <span style={styles.taskMeta}>
+                              {task.completed ? 'Completed' : 'Active'}
+                            </span>
+
+                            <span style={styles.priorityBadge(task.priority)}>
+                              {task.priority === 'high'
+                                ? '🔴 High'
+                                : task.priority === 'medium'
+                                ? '🟡 Medium'
+                                : '🟢 Low'}
+                            </span>
+
+                            <span style={styles.categoryBadge(task.category)}>
+                              {task.category || 'General'}
+                            </span>
+
+                            {task.dueDate && (
+                              <span
+                                style={
+                                  new Date(task.dueDate) < new Date() && !task.completed
+                                    ? styles.dueDateOverdue
+                                    : styles.dueDateBadge
+                                }
+                              >
+                                {new Date(task.dueDate) < new Date() && !task.completed
+                                  ? `Overdue: ${new Date(task.dueDate).toLocaleDateString()}`
+                                  : `Due: ${new Date(task.dueDate).toLocaleDateString()}`}
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={styles.buttonGroup}>
                     {editingTaskId === task._id ? (
-                      <input
-                        value={editedText}
-                        onChange={(e) => setEditedText(e.target.value)}
-                        style={styles.editInput}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') saveEdit(task);
-                          if (e.key === 'Escape') cancelEditing();
-                        }}
-                        autoFocus
-                      />
+                      <>
+                        <button onClick={() => saveEdit(task)} style={styles.saveButton}>
+                          Save
+                        </button>
+                        <button onClick={cancelEditing} style={styles.cancelButton}>
+                          Cancel
+                        </button>
+                      </>
                     ) : (
                       <>
-                        <span
-                          style={{
-                            ...styles.taskText,
-                            textDecoration: task.completed ? 'line-through' : 'none',
-                            color: task.completed ? '#94a3b8' : '#0f172a'
-                          }}
+                        <button onClick={() => startEditing(task)} style={styles.editButton}>
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => toggleTask(task)}
+                          style={task.completed ? styles.undoButton : styles.completeButton}
                         >
-                          {task.title}
-                        </span>
-                        <span style={styles.taskMeta}>
-                          {task.completed ? 'Completed' : 'Active'}
-                        </span>
+                          {task.completed ? 'Undo' : 'Complete'}
+                        </button>
+                        <button
+                          onClick={() => deleteTask(task._id)}
+                          style={styles.deleteButton}
+                        >
+                          Delete
+                        </button>
                       </>
                     )}
                   </div>
                 </div>
+              )}
+            </Draggable>
+          ))
+        )}
 
-                <div style={styles.buttonGroup}>
-                  {editingTaskId === task._id ? (
-                    <>
-                      <button onClick={() => saveEdit(task)} style={styles.saveButton}>
-                        Save
-                      </button>
-                      <button onClick={cancelEditing} style={styles.cancelButton}>
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => startEditing(task)} style={styles.editButton}>
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => toggleTask(task)}
-                        style={task.completed ? styles.undoButton : styles.completeButton}
-                      >
-                        {task.completed ? 'Undo' : 'Complete'}
-                      </button>
-                      <button
-                        onClick={() => deleteTask(task._id)}
-                        style={styles.deleteButton}
-                      >
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        {provided.placeholder}
       </div>
-    </div>
+    )}
+  </Droppable>
+</DragDropContext>
+
+</div>
+</div>
   );
 }
 
@@ -456,6 +666,33 @@ const styles = {
     padding: '32px',
     border: '1px solid #e2e8f0'
   },
+  prioritySelect: {
+  padding: '8px 10px',
+  borderRadius: '10px',
+  border: '1px solid #cbd5e1',
+  fontWeight: 600
+},
+categoryBadge: (category) => {
+  const colors = {
+    work: '#dbeafe',
+    personal: '#dcfce7',
+    gym: '#fee2e2',
+    finance: '#fef3c7',
+    general: '#f3e8ff'
+  };
+
+  const key = (category || 'general').toLowerCase();
+
+  return {
+    backgroundColor: colors[key] || '#e5e7eb',
+    color: '#0f172a',
+    borderRadius: '999px',
+    padding: '3px 8px',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    textTransform: 'capitalize'
+  };
+},
   authCard: {
     width: '100%',
     maxWidth: '480px',
@@ -553,7 +790,8 @@ const styles = {
   },
   inputRow: {
     display: 'flex',
-    gap: '12px',
+    alignItems: 'center',
+    gap: '10px',
     marginBottom: '18px',
     flexWrap: 'wrap'
   },
@@ -762,7 +1000,49 @@ loadingText: {
   borderRadius: '12px',
   fontWeight: 600,
   marginBottom: '16px'
-}
+},
+metaRow: {
+  display: 'flex',
+  gap: '8px',
+  alignItems: 'center'
+},
+priorityBadge: (priority) => ({
+  backgroundColor:
+    priority === 'high' ? '#fecaca' :
+    priority === 'medium' ? '#fde68a' :
+    '#bbf7d0',
+  color: '#0f172a',
+  borderRadius: '999px',
+  padding: '3px 8px',
+  fontSize: '0.75rem',
+  fontWeight: 700,
+  textTransform: 'capitalize'
+}),
+dueDateBadge: {
+  backgroundColor: '#e0f2fe',
+  color: '#075985',
+  borderRadius: '999px',
+  padding: '3px 8px',
+  fontSize: '0.75rem',
+  fontWeight: 700
+},
+dueDateOverdue: {
+  backgroundColor: '#fecaca',
+  color: '#7f1d1d',
+  borderRadius: '999px',
+  padding: '3px 8px',
+  fontSize: '0.75rem',
+  fontWeight: 700
+},
+searchInput: {
+  width: '100%',
+  padding: '14px 16px',
+  borderRadius: '14px',
+  border: '1px solid #cbd5e1',
+  fontSize: '1rem',
+  outline: 'none',
+  marginBottom: '16px'
+},
 };
 
 export default App;
