@@ -2,6 +2,14 @@
   text-align: center;
 }
 
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -57,4 +65,74 @@
 
 .dark .card {
   background-color: #1a1a1a;
+}
+
+.app-container {
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.dark {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+.dark input,
+.dark select {
+  background-color: #111827 !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+}
+
+.dark input::placeholder {
+  color: #94a3b8 !important;
+}
+
+.dark button {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.dark button:hover {
+  transform: translateY(-1px);
+}
+
+.card {
+  background-color: white;
+}
+
+.dark .card {
+  background-color: #1e293b !important;
+}
+
+.dark .stat-box {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+
+.dark .task-item {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+
+.dark .task-item * {
+  color: #f8fafc;
+}
+
+body {
+  transition: background-color 0.3s ease, color 0.3 ease;
+}
+
+.task-item {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.task-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+}
+
+.dark .task-item:hover {
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  border-color: #64748b !important;
 }

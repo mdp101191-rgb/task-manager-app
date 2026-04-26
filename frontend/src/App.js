@@ -371,7 +371,7 @@ toast.success('Task updated');
   return (
   <div className={`app-container ${darkMode ? "dark" : ""}`}>
       <Toaster position="top-right" />
-      <div style={styles.card}>
+      <div className="card" style={styles.card}>
         <div style={styles.header}>
           <div>
             <h1 style={styles.title}>Task Manager</h1>
@@ -397,15 +397,15 @@ toast.success('Task updated');
         </div>
 
         <div style={styles.statsRow}>
-          <div style={styles.statBox}>
+          <div className="stat-box" style={styles.statBox}>
             <span style={styles.statLabel}>Total</span>
             <span style={styles.statValue}>{totalTasks}</span>
           </div>
-          <div style={styles.statBox}>
+          <div className="stat-box" style={styles.statBox}>
             <span style={styles.statLabel}>Active</span>
             <span style={styles.statValue}>{activeCount}</span>
           </div>
-          <div style={styles.statBox}>
+          <div className="stat-box" style={styles.statBox}>
             <span style={styles.statLabel}>Completed</span>
             <span style={styles.statValue}>{completedCount}</span>
           </div>
@@ -530,6 +530,7 @@ toast.success('Task updated');
                   ref={provided.innerRef}
                   {...provided.draggableProps}
                   {...provided.dragHandleProps}
+                  className="task-item"
                   style={{
                     ...styles.taskItem,
                     ...provided.draggableProps.style
