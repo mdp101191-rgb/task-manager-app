@@ -1,48 +1,44 @@
 # 🚀 Task Manager App
 
-Deployed full-stack application with a live frontend, API, and cloud database.
+A full-stack task management app built with React, Express, Node.js, and MongoDB. Users can register, log in, create tasks, edit tasks, assign categories, set priorities, add due dates, search/filter tasks, reorder tasks with drag-and-drop, and toggle light/dark mode.
 
 ## 🌐 Live Demo
-Frontend: [Live App](https://task-manager-app-three-rho.vercel.app/)
-Backend API: [Live API](https://task-manager-app-y1cn.onrender.com)
+
+https://task-manager-app-three-rho.vercel.app/
 
 ## 📌 Overview
 This project is a full-stack CRUD task manager that allows users to create, view, update, and delete tasks through a responsive frontend connected to a deployed backend and cloud database.
 
-## 🛠 Tech Stack
-- **Frontend:** React
-- **Backend:** Node.js, Express
-- **Database:** MongoDB Atlas
-- **Deployment:** Vercel (frontend), Render (backend)
-- **Version Control:** Git + GitHub
-- **API Testing:** Postman
-
 ## ✨ Features
-- Create, view, update, and delete tasks (full CRUD)
-- Mark tasks as completed or active
-- Inline editing with save and cancel functionality
-- Filter tasks by all, active, and completed
-- Persistent cloud storage with MongoDB Atlas
-- Responsive, modern UI with card-based layout
-- Deployed full-stack architecture (Vercel + Render)
+- User authentication with JWT
+- Create, edit, complete, delete tasks
+- Task categories
+- Priority levels: Low, Medium, High
+- Due dates with overdue labels
+- Search and filter by status/priority
+- Drag-and-drop task reordering with saved order
+- Light/dark mode with localStorage persistence
+- Toast notifications
+- Responsive UI polish with hover effects
 
-## 🔌 API Endpoints
-- GET /tasks → fetch all tasks  
-- POST /tasks → create a task  
-- PUT /tasks/:id → update a task  
-- DELETE /tasks/:id → delete a task  
+- ## 🛠 Tech Stack
+**Frontend:** React, JavaScript, CSS, React Hot Toast, @hello-pangea/dnd  
+**Backend:** Node.js, Express.js  
+**Database:** MongoDB / Mongoose  
+**Deployment:** Vercel frontend, Render backend
 
 ## 📷 Screenshots
 
 ### Empty State
-![Empty State](./screenshot1.png)
 
-### With Tasks
-![Tasks Added](./screenshot2.png)
+### Login
+![Login](frontend/public/screenshots/login.png)
 
-### Filters
-![Active Filter](./screenshot3.png) 
-![Completed Filter](./screenshot4.png)
+### Dashboard - Light Mode
+![Dashboard Light](frontend/public/screenshots/dashboard-light.png)
+
+### Dashboard - Dark Mode
+![Dashboard Dark](frontend/public/screenshots/dashboard-dark.png)
 
 ## 🧪 How to Run Locally
 
@@ -73,17 +69,18 @@ MONGO_URI=your_mongodb_connection_string
 ```
 
 ## 📚 What I Learned
-- Built a full-stack CRUD application from scratch
-- Connected React frontend to an Express/Node backend
-- Integrated MongoDB Atlas for persistent cloud data storage
-- Deployed a multi-service app using Vercel and Render
-- Debugged environment variables, cloud deployment, and database connection issues
+- Built and deployed a full-stack app from frontend to backend
+- Implemented JWT authentication and protected routes
+- Connected React to a deployed Express/MongoDB API
+- Debugged production deployment issues with Vercel and Render
+- Added persistent drag-and-drop ordering
+- Improved UI/UX with dark mode, toast notifications, and hover polish
 
 ## 🚀 Future Improvements
-- User authentication
-- Loading and error states
-- Dark mode
-- Mobile-first improvements
+- Mobile layout improvements
+- Per-user saved theme preference in MongoDB
+- Task notes/subtasks
+- Calendar view
 
 ## 👨‍💻 Author
 **Marcos Peon**
