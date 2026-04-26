@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import toast, { Toaster } from 'react-hot-toast';
-import { FaArrowUp, FaMinus, FaArrowDown } from "react-icons/fa";
+// import { FaArrowUp, FaMinus, FaArrowDown } from "react-icons/fa";
 
 
 const API_URL = process.env.REACT_APP_API_URL;
