@@ -1,13 +1,13 @@
 # 🚀 Task Manager App
 
-A full-stack task management app built with React, Express, Node.js, and MongoDB. Users can register, log in, create tasks, edit tasks, assign categories, set priorities, add due dates, search/filter tasks, reorder tasks with drag-and-drop, and toggle light/dark mode.
+A full-stack task management application built using React, Node.js, Express, and MongoDB.
 
 ## 🌐 Live Demo
 
 https://task-manager-app-three-rho.vercel.app/
 
 ## 📌 Overview
-This project is a full-stack CRUD task manager that allows users to create, view, update, and delete tasks through a responsive frontend connected to a deployed backend and cloud database.
+A full-stack task management app built with React, Express, Node.js, and MongoDB. Users can register, log in, create tasks, edit tasks, assign categories, set priorities, add due dates, search/filter tasks, reorder tasks with drag-and-drop, and toggle light/dark mode.
 
 ## ✨ Features
 - User authentication with JWT
