@@ -66,12 +66,16 @@ npm install
 npm start
 ```
 
+```md
 ## 🔐 Environment Variables
 
 Create a `.env` file in the `Backend` folder with:
 
 ```env
 MONGO_URI=your_mongodb_connection_string
+PORT=5000
+JWT_SECRET=your_secret_key
+Make sure to replace the placeholder values with your actual credentials.
 ```
 
 ## 📚 What I Learned
