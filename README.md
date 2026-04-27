@@ -75,8 +75,8 @@ Create a `.env` file in the `Backend` folder with:
 MONGO_URI=your_mongodb_connection_string
 PORT=5000
 JWT_SECRET=your_secret_key
-Make sure to replace the placeholder values with your actual credentials.
 ```
+Make sure to replace the placeholder values with your actual credentials.
 
 ## 📚 What I Learned
 - Built and deployed a full-stack app from frontend to backend
