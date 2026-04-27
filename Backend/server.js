@@ -1,4 +1,5 @@
 require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -234,6 +235,38 @@ app.put('/tasks/:id', authMiddleware, async (req, res) => {
   );
 
   res.json(updatedTask);
+});
+
+app.post('/api/ai/suggest-tasks', async (req, res) => {
+  const { prompt } = req.body;
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "user",
+            content: `Generate 5 short task items based on this goal: ${prompt}`
+          }
+        ]
+      })
+    });
+
+    const data = await response.json();
+
+    res.json({
+      suggestions: data.choices[0].message.content
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: "AI request failed" });
+  }
 });
 
 const PORT = process.env.PORT || 5000;
