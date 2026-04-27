@@ -8,6 +8,7 @@ https://task-manager-app-three-rho.vercel.app/
 
 ## 🎥 Demo Video
 Includes login/register authentication (see screenshots below)
+
 https://github.com/user-attachments/assets/ca099a12-a487-4fb4-8559-e4b58684fddb
 
 ## 📌 Overview
