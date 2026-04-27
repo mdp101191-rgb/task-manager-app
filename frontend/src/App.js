@@ -173,8 +173,8 @@ useEffect(() => {
       body: JSON.stringify({
         title: newTask.trim(),
         completed: false,
-        priority: editedPriority,
-        category: editedCategory.trim() || 'General',
+        priority,
+        category: category.trim() || 'General',
         dueDate: dueDate || null
       })
     });
