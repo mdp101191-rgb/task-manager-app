@@ -5,7 +5,7 @@ import toast, { Toaster } from 'react-hot-toast';
 // import { FaArrowUp, FaMinus, FaArrowDown } from "react-icons/fa";
 
 
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 function App() {
   const [priority, setPriority] = useState('medium');
@@ -22,6 +22,7 @@ function App() {
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editedText, setEditedText] = useState('');
   const [darkMode, setDarkMode] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState([]);
 
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [username, setUsername] = useState(localStorage.getItem('username') || '');
@@ -177,6 +178,7 @@ useEffect(() => {
         category: category.trim() || 'General',
         dueDate: dueDate || null
       })
+           
     });
 
     toast.success('Task added');
@@ -187,6 +189,25 @@ useEffect(() => {
     setCategory('General');
     fetchTasks();
   };
+
+  const getAISuggestions = async () => {
+  if (!newTask.trim()) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/ai/suggest-tasks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ prompt: newTask }),
+    });
+
+    const data = await res.json();
+    setAiSuggestions(data.suggestions.split("\n"));
+  } catch (err) {
+    console.error(err);
+  }
+};
 
 const onDragEnd = async (result) => {
   if (!result.destination) return;
@@ -419,6 +440,9 @@ toast.success('Task updated');
   onChange={(e) => setNewTask(e.target.value)}
   style={styles.input}
 />
+<button onClick={getAISuggestions}>
+  ✨ Suggest Tasks
+</button>
 <input
   type="text"
   placeholder="Category"
@@ -447,6 +471,16 @@ toast.success('Task updated');
   Add Task
 </button>
         </div>
+        {aiSuggestions.length > 0 && (
+  <div style={{ marginTop: "15px" }}>
+    <h4>AI Suggestions:</h4>
+    {aiSuggestions.map((task, i) => (
+      <div key={i} style={{ marginBottom: "5px" }}>
+        {task}
+      </div>
+    ))}
+  </div>
+)}
 
         <input
   type="text"
