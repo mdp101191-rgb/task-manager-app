@@ -13,6 +13,7 @@ https://github.com/user-attachments/assets/ca099a12-a487-4fb4-8559-e4b58684fddb
 
 ## 📌 Overview
 A full-stack task management app built with React, Express, Node.js, and MongoDB. Users can register, log in, create tasks, edit tasks, assign categories, set priorities, add due dates, search/filter tasks, reorder tasks with drag-and-drop, and toggle light/dark mode.
+✨ Includes AI-powered task suggestions that generate actionable task lists based on user input using an external API.
 
 
 ## ✨ Features
@@ -27,15 +28,27 @@ A full-stack task management app built with React, Express, Node.js, and MongoDB
 - Toast notifications
 - Responsive UI polish with hover effects
 
-- ## 🛠 Tech Stack
-**Frontend:** React, JavaScript, CSS, React Hot Toast, @hello-pangea/dnd  
-**Backend:** Node.js, Express.js  
-**Database:** MongoDB / Mongoose  
-**Deployment:** Vercel frontend, Render backend
+  ## 🤖 AI Feature
 
+Users can generate task suggestions by entering a goal (e.g., "Prepare for a junior full stack developer interview").  
+The app sends the request to a backend API endpoint, which securely communicates with an AI service and returns structured task suggestions displayed in the UI.
+
+This demonstrates:
+- API integration
+- Backend routing with Express
+- Secure environment variable handling
+- Frontend ↔ backend communication
+
+## 🛠 Tech Stack
+
+- Frontend: React
+- Backend: Node.js, Express
+- Database: MongoDB
+- Authentication: JWT
+- Deployment: Vercel (frontend), Render (backend)
+- AI Integration: OpenAI API
+  
 ## 📷 Screenshots
-
-### Empty State
 
 ### Login
 ![Login](frontend/public/screenshots/login.png)
@@ -46,11 +59,26 @@ A full-stack task management app built with React, Express, Node.js, and MongoDB
 ### Dashboard - Dark Mode
 ![Dashboard Dark](frontend/public/screenshots/dashboard-dark.png)
 
-## 🧪 How to Run Locally
+ ## 🤖 AI-Powered Task Suggestions
 
-### 1. Clone the repo
+ ![AI Suggestions](frontend/public/screenshots/ai-suggestions.png)
+
+ Users can generate intelligent, structured task suggestions based on their goals (e.g., "Prepare for a junior full stack developer interview"). This feature integrates a frontend React interface with a backend Express API that securely communicates with an AI service.
+
+**Key concepts demonstrated:**
+- API integration
+- Backend routing with Express
+- Secure environment variable handling
+- Frontend ↔ backend communication
+
+## ✍️ How to Run Locally
+
+## 🚀 Getting Started
+
+### 1. Clone the repository
 ```bash
 git clone https://github.com/mdp101191-rgb/task-manager-app.git
+cd task-manager-app
 
 ### 2. Start the backend
 ```bash
