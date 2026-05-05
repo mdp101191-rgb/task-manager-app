@@ -203,10 +203,36 @@ useEffect(() => {
     });
 
     const data = await res.json();
-    setAiSuggestions(data.suggestions.split("\n"));
-  } catch (err) {
-    console.error(err);
+    setAiSuggestions(
+  data.suggestions
+    .split("\n")
+    .map((item) => item.replace(/^[-*\d.]+\s*/, "").trim())
+    .filter(Boolean)
+);
+
+const addSuggestedTask = async (suggestedTitle) => {
+  if (!suggestedTitle.trim()) return;
+
+  const exists = tasks.some(t => t.tittle === suggestedTitle);
+  if (exists) {
+    toast.info("Task already exists");
+    return;
   }
+
+  await fetch(`${API_URL}/tasks`, {
+    method: "POST",
+    headers: authHeaders,
+    body: JSON.stringify({
+      title: suggestedTitle.trim(),
+      completed: false,
+      priority: "medium",
+      category: "AI Suggested",
+      dueDate: null
+    })
+  });
+
+  toast.success("AI task added");
+  fetchTasks();
 };
 
 const onDragEnd = async (result) => {
@@ -475,10 +501,14 @@ toast.success('Task updated');
   <div style={{ marginTop: "15px" }}>
     <h4>AI Suggestions:</h4>
     {aiSuggestions.map((task, i) => (
-      <div key={i} style={{ marginBottom: "5px" }}>
-        {task}
-      </div>
-    ))}
+  <button
+    key={i}
+    onClick={() => addSuggestedTask(task)}
+    style={styles.aiSuggestionButton}
+  >
+    ➕ {task}
+  </button>
+))}
   </div>
 )}
 
@@ -1100,6 +1130,19 @@ searchInput: {
   fontSize: '1rem',
   outline: 'none',
   marginBottom: '16px'
+},
+aiSuggestionButton: {
+  display: "block",
+  width: "100%",
+  textAlign: "left",
+  marginBottom: "8px",
+  padding: "10px 12px",
+  borderRadius: "12px",
+  border: "1px solid #cbd5e1",
+  backgroundColor: "#f8fafc",
+  cursor: "pointer",
+  fontWeight: 600,
+  transition: "0.2s ease"
 },
 };
 
