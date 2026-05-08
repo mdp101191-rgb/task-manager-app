@@ -170,8 +170,6 @@ useEffect(() => {
   const addTask = async () => {
     if (!newTask.trim()) return;
 
-    setAiLoading(true);
-
     await fetch(`${API_URL}/tasks`, {
       method: 'POST',
       headers: authHeaders,
@@ -196,6 +194,8 @@ useEffect(() => {
 
   const getAISuggestions = async () => {
   if (!newTask.trim()) return;
+  
+  setAiLoading(true);
 
   try {
     const res = await fetch(`${API_URL}/api/ai/suggest-tasks`, {
@@ -485,7 +485,8 @@ toast.success('Task updated');
   onChange={(e) => setNewTask(e.target.value)}
   style={styles.input}
 />
-<button 
+<button
+type="button"
 onClick={getAISuggestions}
 disabled={aiLoading}
 style={styles.aiButton}
@@ -523,7 +524,11 @@ style={styles.aiButton}
   style={{ marginLeft: '10px', padding: '8px' }}
 />
 
-<button onClick={addTask} style={styles.addButton}>
+<button
+type="button"
+onClick={addTask}
+style={styles.addButton}
+>
   Add Task
 </button>
         </div>
