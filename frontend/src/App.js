@@ -23,6 +23,8 @@ function App() {
   const [editedText, setEditedText] = useState('');
   const [darkMode, setDarkMode] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const styles = getStyles(darkMode);
 
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [username, setUsername] = useState(localStorage.getItem('username') || '');
@@ -168,6 +170,8 @@ useEffect(() => {
   const addTask = async () => {
     if (!newTask.trim()) return;
 
+    setAiLoading(true);
+
     await fetch(`${API_URL}/tasks`, {
       method: 'POST',
       headers: authHeaders,
@@ -206,14 +210,29 @@ useEffect(() => {
     setAiSuggestions(
   data.suggestions
     .split("\n")
-    .map((item) => item.replace(/^[-*\d.]+\s*/, "").trim())
-    .filter(Boolean)
+    .map((item) => 
+      item.replace(/^[-*\d.]+\s*/, "").trim()
+  )
+    .filter(
+      (item) =>
+        item &&
+        !item.toLowerCase().includes("here are") &&
+        !item.toLowerCase().includes("task items")
+    )
 );
+  } catch (error) {
+    console.error (error);
+    toast.error("Failed to get AI suggestions");
+  } finally {
+    setAiLoading (false);
+  }
+};
 
 const addSuggestedTask = async (suggestedTitle) => {
   if (!suggestedTitle.trim()) return;
 
-  const exists = tasks.some(t => t.tittle === suggestedTitle);
+  const exists = tasks.some(t => t.title === suggestedTitle);
+
   if (exists) {
     toast.info("Task already exists");
     return;
@@ -227,8 +246,8 @@ const addSuggestedTask = async (suggestedTitle) => {
       completed: false,
       priority: "medium",
       category: "AI Suggested",
-      dueDate: null
-    })
+      dueDate: null,
+    }),
   });
 
   toast.success("AI task added");
@@ -466,9 +485,20 @@ toast.success('Task updated');
   onChange={(e) => setNewTask(e.target.value)}
   style={styles.input}
 />
-<button onClick={getAISuggestions}>
-  ✨ Suggest Tasks
+<button 
+onClick={getAISuggestions}
+disabled={aiLoading}
+style={styles.aiButton}
+>
+  {aiLoading ? "Generating..." : "✨ Suggest Tasks"}
 </button>
+
+{aiLoading && (
+  <p style={{ marginTop: "10px", color: "#666" }}>
+  Gathering AI suggestions...
+  </p>
+)}
+
 <input
   type="text"
   placeholder="Category"
@@ -735,7 +765,7 @@ toast.success('Task updated');
   );
 }
 
-const styles = {
+const getStyles = (darkMode) => ({
   page: {
     minHeight: '100vh',
     background: 'linear-gradient(135deg, #eff6ff 0%, #f8fafc 45%, #eef2ff 100%)',
@@ -1138,12 +1168,23 @@ aiSuggestionButton: {
   marginBottom: "8px",
   padding: "10px 12px",
   borderRadius: "12px",
-  border: "1px solid #cbd5e1",
-  backgroundColor: "#f8fafc",
+  border: darkMode ? "1px solid #374151" : "1px solid #cbd5e1",
+  backgroundColor: darkMode ? "#1f2937" : "#f8fafc",
+  color: darkMode ? "#f9fafb" : "#111827",
   cursor: "pointer",
   fontWeight: 600,
   transition: "0.2s ease"
 },
-};
+aiButton: {
+  marginLeft: "10px",
+  padding: "8px 12px",
+  borderRadius: "8px",
+  border: darkMode ? "1px solid #374151" : "1px solid #cbd5e1",
+  backgroundColor: darkMode ? "#1f2937" : "#f8fafc",
+  color: darkMode ? "#f9fafb" : "#111827",
+  cursor: "pointer",
+  fontWeight: 600,
+},
+});
 
 export default App;
